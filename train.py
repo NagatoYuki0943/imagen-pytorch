@@ -8,6 +8,7 @@ if __name__ == "__main__":
     train_num_steps = 100000
     results_folder = f"results/flowers/{train_num_steps}"
     max_batch_size = 16
+    checkpoint_every = 1000 # save interval
 
     # unets for unconditional imagen
     unet1 = BaseUnet64(
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         imagen = imagen,
         split_valid_from_train = True,  # whether to split the validation dataset from the training
         checkpoint_path = results_folder,
-        checkpoint_every = 1000,        # save interval
+        checkpoint_every = checkpoint_every,
         use_lion = True,
         lr = 0.0001,
         eps = 1e-8,
@@ -82,15 +83,15 @@ if __name__ == "__main__":
             pbar.set_description(f"loss: {loss:.4f}")
             tb_writer.add_scalar("loss", loss, i)
 
-            if (i != 0) and (not (i % 1000)):
+            if (i != 0) and (not (i % checkpoint_every)):
                 valid_loss = trainer.valid_step(unet_number = unet_number, max_batch_size = max_batch_size)
                 trainer.print(f"valid loss: {valid_loss}")
                 tb_writer.add_scalar("valid loss", valid_loss, i)
 
-            if  (i != 0) and (not (i % 1000)) and trainer.is_main: # is_main makes sure this can run in distributed
+            if  (i != 0) and (not (i % checkpoint_every)) and trainer.is_main: # is_main makes sure this can run in distributed
                 # gen image
                 images = trainer.sample(batch_size = 1, return_pil_images = True) # returns List[Image]
-                images[0].save(f"{results_folder}/sample-{i // 100}.png")
+                images[0].save(f"{results_folder}/sample-{i // checkpoint_every}.png")
 
             pbar.update(1)
 
