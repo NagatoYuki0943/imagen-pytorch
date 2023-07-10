@@ -79,18 +79,18 @@ if __name__ == "__main__":
             loss = trainer.train_step(unet_number = unet_number, max_batch_size = max_batch_size)
             trainer.update(unet_number=unet_number)
 
-            pbar.set_description(f'loss: {loss:.4f}')
+            pbar.set_description(f"loss: {loss:.4f}")
             tb_writer.add_scalar("loss", loss, i)
 
             if (i != 0) and (not (i % 1000)):
                 valid_loss = trainer.valid_step(unet_number = unet_number, max_batch_size = max_batch_size)
-                trainer.print(f'valid loss1: {valid_loss}, valid loss2: {valid_loss}')
+                trainer.print(f"valid loss: {valid_loss}")
                 tb_writer.add_scalar("valid loss", valid_loss, i)
 
             if  (i != 0) and (not (i % 1000)) and trainer.is_main: # is_main makes sure this can run in distributed
                 # gen image
                 images = trainer.sample(batch_size = 1, return_pil_images = True) # returns List[Image]
-                images[0].save(f'{results_folder}/sample-{i // 100}.png')
+                images[0].save(f"{results_folder}/sample-{i // 100}.png")
 
             pbar.update(1)
 
