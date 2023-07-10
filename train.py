@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     image_folder = r"../datasets/flowers"
-    results_folder = r"results/flowers/200000"
     train_num_steps = 100000
+    results_folder = f"results/flowers/{train_num_steps}"
     max_batch_size = 16
 
     # unets for unconditional imagen
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         imagen = imagen,
         split_valid_from_train = True,  # whether to split the validation dataset from the training
         checkpoint_path = results_folder,
-        checkpoint_every = 1000,
+        checkpoint_every = 1000,        # save interval
         use_lion = True,
         lr = 0.0001,
         eps = 1e-8,
