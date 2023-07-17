@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # Train an unet at a time
     # https://github.com/lucidrains/imagen-pytorch/issues/142
     # you cannot only train on one unet at a time. you will need to save the trainer into a checkpoint, and resume training on a new unet
-    unet_number = 2
+    unet_number = 1
 
     # unets for unconditional imagen
     unet1 = BaseUnet64(
