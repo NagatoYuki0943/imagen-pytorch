@@ -1,21 +1,16 @@
 import math
-import copy
 import operator
 import functools
-from typing import List
 from tqdm.auto import tqdm
 from functools import partial, wraps
-from contextlib import contextmanager, nullcontext
-from collections import namedtuple
 from pathlib import Path
 
 import torch
 import torch.nn.functional as F
 from torch import nn, einsum
 
-from einops import rearrange, repeat, reduce, pack, unpack
-from einops.layers.torch import Rearrange, Reduce
-from einops_exts.torch import EinopsToAndFrom
+from einops import rearrange, repeat, pack, unpack
+from einops.layers.torch import Rearrange
 
 from imagen_pytorch.t5 import t5_encode_text, get_encoded_dim, DEFAULT_T5_NAME
 
@@ -1505,7 +1500,7 @@ class Unet3D(nn.Module):
         mid_dim = dims[-1]
 
         self.mid_block1 = ResnetBlock(mid_dim, mid_dim, cond_dim = cond_dim, time_cond_dim = time_cond_dim, groups = resnet_groups[-1])
-        self.mid_attn = EinopsToAndFrom('b c f h w', 'b (f h w) c', Residual(Attention(mid_dim, **attn_kwargs))) if attend_at_middle else None
+        self.mid_attn = Residual(Attention(mid_dim, **attn_kwargs)) if attend_at_middle else None
         self.mid_temporal_peg = temporal_peg(mid_dim)
         self.mid_temporal_attn = temporal_attn(mid_dim)
         self.mid_block2 = ResnetBlock(mid_dim, mid_dim, cond_dim = cond_dim, time_cond_dim = time_cond_dim, groups = resnet_groups[-1])
@@ -1876,7 +1871,13 @@ class Unet3D(nn.Module):
         x = self.mid_block1(x, t, c, **conv_kwargs)
 
         if exists(self.mid_attn):
+            x = rearrange(x, 'b c f h w -> b f h w c')
+            x, ps = pack([x], 'b * c')
+
             x = self.mid_attn(x)
+
+            x, = unpack(x, ps, 'b * c')
+            x = rearrange(x, 'b f h w c -> b c f h w')
 
         if not ignore_time:
             x = self.mid_temporal_peg(x)
